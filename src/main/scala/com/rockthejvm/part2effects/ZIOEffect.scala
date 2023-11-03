@@ -140,8 +140,8 @@ object ZIOEffect {
         2
       }
 
-      println(runtime.unsafe.run(sequenceTakeFirstZio(firstEffect, secondEffect)))
-      // println(runtime.unsafe.run(fiboZio(34)))
+      // println(runtime.unsafe.run(sequenceTakeFirstZio(firstEffect, secondEffect)))
+      println(runtime.unsafe.run(fiboZio(34)))
     }
   }
 }
