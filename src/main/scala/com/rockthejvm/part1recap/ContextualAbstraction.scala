@@ -55,7 +55,5 @@ object ContextualAbstraction {
 
   val sum10_v2 = numbers.reduceAll
 
-  // Type Classes Pattern
-
   def main(array: Array[String]): Unit = {}
 }
