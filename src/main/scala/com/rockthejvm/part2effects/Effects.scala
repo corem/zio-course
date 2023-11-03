@@ -1,6 +1,7 @@
 package com.rockthejvm.part2effects
 
 import scala.concurrent.Future
+import scala.io.StdIn
 
 object Effects {
 
@@ -76,15 +77,48 @@ object Effects {
    */
 
   // 1
+  val currentTime: MyIO[Long] = MyIO(() => System.currentTimeMillis())
 
   // 2
-  def measure[A](computation: MyIO[A]): MyIO[(Long, A)] = ???
+  def measure[A](computation: MyIO[A]): MyIO[(Long, A)] = for {
+    startTime <- currentTime
+    result <- computation
+    endTime <- currentTime
+  } yield (endTime - startTime, result)
+
+  def measureV2[A](computation: MyIO[A]): MyIO[(Long, A)] = {
+    MyIO { () =>
+        val startTime = System.currentTimeMillis()
+        val result = computation.unsafeRun()
+        val endTime = System.currentTimeMillis()
+        (endTime - startTime, result)
+    }
+  }
+
+  def demoMeasurement(): Unit = {
+    val computation = MyIO(() => {
+      println("Crunching numbers...")
+      Thread.sleep(1000)
+      println("Done!")
+      42
+    })
+
+    println(measure(computation).unsafeRun())
+    println(measureV2(computation).unsafeRun())
+  }
 
   // 3
+  val readLine: MyIO[String] = MyIO(() => StdIn.readLine())
+  def putStrLn(line: String): MyIO[Unit] = MyIO(() => println(line))
 
   // 4
+  val program = for {
+    _ <- putStrLn("What's your name ?")
+    name <- readLine
+    _ <- putStrLn(s"Welcome $name")
+  } yield ()
 
   def main(args: Array[String]): Unit = {
-    anIOWithSideEffects.unsafeRun()
+    program.unsafeRun()
   }
 }
