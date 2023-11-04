@@ -19,4 +19,11 @@ object ZIOApps {
 
 object BetterApp extends ZIOAppDefault {
 
+  override def run: ZIO[Any, Any, Any] = ZIOApps.meaningOfLife.debug
+
 }
+
+// Not needed
+//object ManualApp extends ZIOApp {
+//
+//}
