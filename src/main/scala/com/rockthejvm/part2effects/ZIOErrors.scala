@@ -1,9 +1,10 @@
+/*
 package com.rockthejvm.part2effects
 
 import zio.*
 
+import java.io.IOException
 import java.net.NoRouteToHostException
-import scala.sys.process.processInternal.IOException
 import scala.util.{Failure, Success, Try}
 
 object ZIOErrors extends ZIOAppDefault {
@@ -222,3 +223,4 @@ object ZIOErrors extends ZIOAppDefault {
 
   override def run = ???
 }
+*/
