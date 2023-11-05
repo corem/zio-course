@@ -1,7 +1,9 @@
 package com.rockthejvm.part3concurrency
 
-import zio._
-import com.rockthejvm.utils._
+import zio.*
+import com.rockthejvm.utils.*
+
+import java.io.*
 
 object Fibers extends ZIOAppDefault {
 
@@ -65,5 +67,37 @@ object Fibers extends ZIOAppDefault {
   } yield message
 
   //def run = runOnAnotherThreadV2(meaningOfLife).debugThread
-  def run = chainedFibers.debugThread
+
+
+  /**
+   * Exercices
+   */
+
+  // 1. Zip 2 fibers without using the .zip combinator
+  // Hint: create a fiber that waits for both
+  def zipFiber[E,A,B](fiber1: Fiber[E,A], fiber2:Fiber[E,B]): ZIO[Any, Nothing, Fiber[E, (A,B)]] = ???
+
+  // 2. Same thing with orElse
+  def chainFibers[E,A](fiber1: Fiber[E,A], fiber2:Fiber[E,A]): ZIO[Any, Nothing, Fiber[E, A]] = ???
+
+  // 3. Distributing a task in between many fibers
+  // Spawn n fibers, count the n of words in each file then aggregate all the results together in one number
+  def generateRandomFile(path: String): Unit = {
+    val random = scala.util.Random
+    val chars = 'a' to 'z'
+    val nWords = random.nextInt(2000)
+
+    val content = {1 to nWords}
+      .map(_ => (1 to random.nextInt(10)).map(_ => chars(random.nextInt(26))).mkString) // one word for every 1 to nWords
+      .mkString(" ")
+
+    val writer = new FileWriter(new File(path))
+    writer.write(content)
+    writer.flush()
+    writer.close()
+  }
+
+  // Use this to generate 10 files
+  //def run = ZIO.succeed((1 to 10).foreach(i => generateRandomFile(s"src/main/resources/testfile_$i.txt")))
+  def run = ZIO.succeed((1 to 10).foreach(i => generateRandomFile(s"src/main/resources/testfile_$i.txt")))
 }
