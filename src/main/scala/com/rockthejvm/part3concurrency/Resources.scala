@@ -9,6 +9,7 @@ import java.util.Scanner
 object Resources extends ZIOAppDefault {
   // Finalizers
   def unsafeMethod(): Int = throw new RuntimeException("Not an int here for you !")
+
   val anAttempt = ZIO.attempt(unsafeMethod())
 
   // Finalizers can be attached to an object
@@ -22,6 +23,7 @@ object Resources extends ZIOAppDefault {
   // Resource lifecycle
   class Connection(url: String) {
     def open() = ZIO.succeed(s"Opening connection to $url...").debugThread
+
     def close() = ZIO.succeed(s"Closing connection to $url...").debugThread
   }
 
@@ -57,9 +59,9 @@ object Resources extends ZIOAppDefault {
   // acquireReleaseWith
   val cleanConnectionV2 = ZIO.acquireReleaseWith(
     Connection.create("rockthejvm.com")
-  ) (
+  )(
     _.close()
-  ) (
+  )(
     conn => conn.open() *> ZIO.sleep(300.seconds) // use effect
   )
 
@@ -88,9 +90,9 @@ object Resources extends ZIOAppDefault {
     ZIO.succeed(s"Opening file at $path").debugThread *>
       ZIO.acquireReleaseWith(
         openFileScanner(path) // acquire
-      ) (
+      )(
         scanner => ZIO.succeed(s"Closing file at $path").debugThread *> ZIO.succeed(scanner.close()) // close
-      ) (
+      )(
         readLineByLine // usage
       )
 
@@ -100,6 +102,21 @@ object Resources extends ZIOAppDefault {
   } yield ()
 
   // acquireRelease vs acquireReleaseWith
+  def connFromConfig(path: String): UIO[Unit] =
+    ZIO.acquireReleaseWith(openFileScanner(path))(scanner => ZIO.succeed("Closing file").debugThread *> ZIO.succeed(scanner.close())) { scanner =>
+      ZIO.acquireReleaseWith(Connection.create(scanner.nextLine()))(_.close()) { conn =>
+        conn.open() *> ZIO.never
+      }
+    }
 
-  def run = testInterruptFileDisplay
+  // nested resource
+  def connFromConfigV2(path: String): UIO[Unit] = ZIO.scoped {
+    for {
+      scan <- ZIO.acquireRelease(openFileScanner(path))(scanner => ZIO.succeed("Closing file").debugThread *> ZIO.succeed(scanner.close()))
+      conn <- ZIO.acquireRelease(Connection.create(scan.nextLine()))(_.close())
+      _ <- conn.open() *> ZIO.never
+    } yield ()
+  }
+
+  def run = connFromConfigV2("src/main/resources/connection.conf")
 }
