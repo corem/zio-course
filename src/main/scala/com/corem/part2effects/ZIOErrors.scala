@@ -1,5 +1,5 @@
 /*
-package com.rockthejvm.part2effects
+package com.corem.part2effects
 
 import zio.*
 

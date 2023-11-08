@@ -1,7 +1,7 @@
-package com.rockthejvm.part3concurrency
+package com.corem.part3concurrency
 
 import zio.*
-import com.rockthejvm.utils.*
+import com.corem.utils.*
 
 import java.io.File
 import java.util.Scanner
@@ -97,7 +97,7 @@ object Resources extends ZIOAppDefault {
       )
 
   val testInterruptFileDisplay = for {
-    fib <- acquireOpenFile("src/main/scala/com/rockthejvm/part3concurrency/Resources.scala").fork
+    fib <- acquireOpenFile("src/main/scala/com/corem/part3concurrency/Resources.scala").fork
     _ <- ZIO.sleep(2.seconds) *> fib.interrupt
   } yield ()
 

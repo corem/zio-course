@@ -1,4 +1,4 @@
-package com.rockthejvm.part2effects
+package com.corem.part2effects
 
 import scala.concurrent.Future
 import scala.io.StdIn

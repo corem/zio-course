@@ -1,7 +1,7 @@
-package com.rockthejvm.part3concurrency
+package com.corem.part3concurrency
 
 import zio._
-import com.rockthejvm.utils._
+import com.corem.utils._
 
 object Interruptions extends ZIOAppDefault {
 

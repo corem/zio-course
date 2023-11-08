@@ -1,4 +1,4 @@
-package com.rockthejvm.part1recap
+package com.corem.part1recap
 
 object Variance {
   // OOP - Substitution

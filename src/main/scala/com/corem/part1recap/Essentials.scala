@@ -1,4 +1,4 @@
-package com.rockthejvm.part1recap
+package com.corem.part1recap
 import java.util.concurrent.Executors
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}

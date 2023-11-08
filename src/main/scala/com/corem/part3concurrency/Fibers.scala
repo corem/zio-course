@@ -1,7 +1,7 @@
-package com.rockthejvm.part3concurrency
+package com.corem.part3concurrency
 
 import zio.*
-import com.rockthejvm.utils.*
+import com.corem.utils.*
 
 import java.io.*
 
