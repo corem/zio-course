@@ -1,13 +1,12 @@
 package com.corem.part3concurrency
 
-import com.corem.part3concurrency.AsynchronousEffects.LoginService.{
-  AuthError,
-  UserProfile
-}
+import com.corem.part3concurrency.AsynchronousEffects.LoginService.{AuthError, UserProfile}
 import zio.*
 import com.corem.utils.*
 
 import java.util.concurrent.{ExecutorService, Executors}
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success, Try}
 
 object AsynchronousEffects extends ZIOAppDefault {
 
@@ -72,15 +71,55 @@ object AsynchronousEffects extends ZIOAppDefault {
     */
 
   // 1. Surface a computation running on some (external) thread to a ZIO
-  def external2ZIO[A](computation: () => A)(
-      executor: ExecutorService
-  ): Task[A] = ???
+  def external2ZIO[A](computation: () => A)(executor: ExecutorService): Task[A] =
+    ZIO.async[Any, Throwable, A] { cb =>
+      executor.execute { () =>
+        try {
+          val result = computation()
+          cb(ZIO.succeed(result))
+        } catch {
+          case e: Throwable => cb(ZIO.fail(e))
+        }
+      }
+    }
 
   val demoExternal2ZIO = {
+    val executor = Executors.newFixedThreadPool(8)
     val zio = external2ZIO { () =>
-      println(s"")
-    }
+      println(s"[${Thread.currentThread().getName}] computing the meaning of life on some thread")
+      Thread.sleep(1000)
+      42
+    } (executor)
+
+    zio.debugThread.unit
   }
 
-  def run = loginProgram
+  // 2. Lift a future to a ZIO
+  def future2ZIO[A](future: => Future[A])(using ec: ExecutionContext): Task[A] =
+    ZIO.async[Any, Throwable, A] { cb =>
+      future.onComplete {
+        case Success(value) => cb(ZIO.succeed(value))
+        case Failure(ex) => cb(ZIO.fail(ex))
+      }
+    }
+
+  lazy val demoFuture2ZIO = {
+    val executor = Executors.newFixedThreadPool(8)
+    implicit val ec = ExecutionContext.fromExecutorService(executor)
+    val mol: Task[Int] = future2ZIO(Future {
+      println(s"[${Thread.currentThread().getName}] computing the meaning of life on some thread")
+      Thread.sleep(1000)
+      42
+    })
+
+    mol.debugThread.unit
+  }
+
+  // 3. Implement a never ending ZIO
+  def neverEndingZIO[A]: UIO[A] =
+    ZIO.async(_ => ())
+
+  val never = ZIO.never
+
+  def run = ZIO.succeed("Computing...").debugThread *> neverEndingZIO[Int] *> ZIO.succeed("Completed.").debugThread
 }
