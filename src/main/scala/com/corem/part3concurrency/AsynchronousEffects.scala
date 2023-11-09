@@ -121,5 +121,5 @@ object AsynchronousEffects extends ZIOAppDefault {
 
   val never = ZIO.never
 
-  def run = ZIO.succeed("Computing...").debugThread *> neverEndingZIO[Int] *> ZIO.succeed("Completed.").debugThread
+  def run = ZIO.succeed("Computing ...").debugThread *> neverEndingZIO[Int] *> ZIO.succeed("Completed !").debugThread
 }
