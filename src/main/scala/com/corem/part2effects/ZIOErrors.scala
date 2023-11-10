@@ -1,4 +1,3 @@
-/*
 package com.corem.part2effects
 
 import zio.*
@@ -62,8 +61,7 @@ object ZIOErrors extends ZIOAppDefault {
 
   /**
    * Exercise: implement a version of fromTry, fromEither, either, absolve using fold and foldZIO
-   */
-
+  */
   def try2Zio[A](aTry: Try[A]): Task[A] = aTry match {
     case Failure(exception) => ZIO.fail(exception)
     case Success(value) => ZIO.succeed(value)
@@ -117,13 +115,11 @@ object ZIOErrors extends ZIOAppDefault {
     cause => ZIO.succeed(s"This failed with ${cause.defects}"),
     value => ZIO.succeed(s"This succeed with $value")
   )
-
   /*
     Good practice:
       - at a lower level, your errors should be treated
       - at a higher level, you should hide "errors" and assume they are unrecoverable
   */
-
   def callHTTPEndpoint(url: String): ZIO[Any, IOException, String] =
     ZIO.fail(new IOException("No internet, dummy !"))
 
@@ -144,9 +140,7 @@ object ZIOErrors extends ZIOAppDefault {
     case e => e.getMessage
   }
 
-  /*
-    Combine effects with different errors
-  */
+  // Combine effects with different errors
   case class IndexError(message: String)
   case class DbError(message: String)
   val callApi: ZIO[Any, IndexError, String] = ZIO.succeed("Page: <html></html>")
@@ -166,10 +160,7 @@ object ZIOErrors extends ZIOAppDefault {
           val combined: ZIO[Any, IndexError | DbError, (String, Int)]
       - .mapError to some common error type
   */
-
-  /**
-   * Exercices:
-   */
+  // Exercices:
   // 1 - Make this effect fail with a Typed error
   val aBadFailure = ZIO.succeed[Int](throw new RuntimeException("This is bad!"))
   val aBetterFailure = aBadFailure.sandbox // Eposes the defect in the cause
@@ -223,4 +214,3 @@ object ZIOErrors extends ZIOAppDefault {
 
   override def run = ???
 }
-*/
