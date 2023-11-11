@@ -1,7 +1,9 @@
 package com.corem.part4coordination
 
-import zio._
-import com.corem.utils._
+import zio.*
+import com.corem.utils.*
+
+import scala.sys.process.ProcessIO
 
 object Promises extends ZIOAppDefault {
   val aPromise: ZIO[Any, Nothing, Promise[Throwable, Int]] = Promise.make[Throwable, Int]
@@ -71,5 +73,70 @@ object Promises extends ZIOAppDefault {
     } yield ()
   }
 
-  def run = downloadFileWithRefPromise()
+  /**
+   * Exercices
+   * 1. Write a simulated egg boiler with two ZIOs
+   *  - one increments a counter every 1s
+   *  - one waits for the counter to become 10, after which it will ring a bell
+   *
+   * 2. Write a race pair
+   */
+
+  def eggBoiler(): UIO[Unit] = {
+    def eggReady(signal: Promise[Nothing, Unit]) = for {
+      _ <- ZIO.succeed("Egg boiling on some other fiber, waiting...").debugThread
+      _ <- signal.await
+      _ <- ZIO.succeed("Egg ready!").debugThread
+    } yield ()
+
+    def tickingClock(ticks: Ref[Int], signal: Promise[Nothing, Unit]): UIO[Unit] = for {
+      _ <- ZIO.sleep(1.second)
+      count <- ticks.updateAndGet(_ + 1)
+      _ <- ZIO.succeed(count).debugThread
+      _ <- if (count >= 10) signal.succeed(()) else tickingClock(ticks, signal)
+    } yield ()
+
+    for {
+      ticks <- Ref.make(0)
+      signal <- Promise.make[Nothing, Unit]
+      _ <- eggReady(signal) zipPar tickingClock(ticks, signal)
+    } yield ()
+  }
+
+  def racePair[R,E,A,B](zioa: => ZIO[R,E,A], ziob: ZIO[R,E,B]):
+  ZIO[R,Nothing,Either[(Exit[E,A], Fiber[E,B]), (Fiber[E,A], Exit[E,B])]] = {
+    ZIO.uninterruptibleMask { restore =>
+      for {
+        promise <- Promise.make[Nothing, Either[Exit[E,A], Exit[E,B]]]
+        fibA <- restore(zioa).onExit(exita => promise.succeed(Left(exita))).fork
+        fibB <- restore(ziob).onExit(exitb => promise.succeed(Right(exitb))).fork
+
+        result <- restore(promise.await).onInterrupt {
+          for {
+            interruptA <- fibA.interrupt.fork
+            interruptB <- fibB.interrupt.fork
+            _ <- interruptA.join
+            _ <- interruptB.join
+          } yield ()
+        }
+      } yield result match {
+        case Left(exitA) => Left((exitA, fibB))
+        case Right(exitB) => Right((fibA, exitB))
+      }
+    }
+  }
+
+  val demoRacePair = {
+    val zioa = ZIO.sleep(1.second).as(1).onInterrupt(ZIO.succeed("First interrupted").debugThread)
+    val ziob = ZIO.sleep(2.second).as(2).onInterrupt(ZIO.succeed("Second interrupted").debugThread)
+
+    val pair = racePair(zioa, ziob)
+
+    pair.flatMap {
+      case Left((exita, fibb)) => fibb.interrupt *> ZIO.succeed("First won").debugThread *> ZIO.succeed(exita).debugThread
+      case Right((fiba, exitb)) => fiba.interrupt *> ZIO.succeed("Second won").debugThread *> ZIO.succeed(exitb).debugThread
+    }
+  }
+
+  def run = demoRacePair
 }
