@@ -7,3 +7,7 @@ abstract class Mutex {
   def acquire: UIO[Unit]
   def release: UIO[Unit]
 }
+
+object Mutex {
+  def make: UIO[Mutex] = ???
+}
