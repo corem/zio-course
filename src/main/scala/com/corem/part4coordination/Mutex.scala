@@ -2,6 +2,7 @@ package com.corem.part4coordination
 
 import zio._
 import com.corem.utils._
+import scala.collection.immutable.Queue
 
 abstract class Mutex {
   def acquire: UIO[Unit]

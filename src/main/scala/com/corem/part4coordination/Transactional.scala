@@ -1,6 +1,7 @@
 package com.corem.part4coordination
 
 import zio._
+import zio.stm._
 import com.corem.utils._
 
 object Transactional extends ZIOAppDefault {
