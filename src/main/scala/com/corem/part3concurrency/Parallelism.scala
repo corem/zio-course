@@ -1,4 +1,3 @@
-/*
 package com.corem.part3concurrency
 
 import zio._
@@ -91,4 +90,3 @@ object Parallelism extends ZIOAppDefault {
 
   def run = wordCountParallel(10).debugThread
 }
-*/
