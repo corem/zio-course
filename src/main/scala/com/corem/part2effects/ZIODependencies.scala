@@ -1,4 +1,3 @@
-/*
 package com.corem.part2effects
 
 import zio.*
@@ -88,7 +87,6 @@ object ZIODependencies extends ZIOAppDefault{
         - Not having all dependencies in the same place
         - Passing dependencies multiple times can cause problems
   */
-
   def subscribe(user: User): ZIO[Any, Throwable, Unit] = for {
     sub <- subscriptionService // Service is instantiated at the point of call
     _ <- sub.notifyUser(user)
@@ -112,7 +110,6 @@ object ZIODependencies extends ZIOAppDefault{
   } yield ()
 
   /*
-
     - We don't need to care about dependencies until the end of the world
     - All ZIOs requiring this dependency will use the same instance
     - Can use different instances of the same type for different needs (e.g. testing)
@@ -180,5 +177,3 @@ object ZIODependencies extends ZIOAppDefault{
 
   def run = runnableProgramV2
 }
-
-*/
